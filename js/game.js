@@ -38,6 +38,9 @@ class RacingGame {
     startGame() {
         if (this.isGameRunning) return;
         
+        const gameOverMessage = document.querySelector('.game-over-message');
+        gameOverMessage.style.display = 'none';
+        
         this.isGameRunning = true;
         this.score = 0;
         this.speed = 1;
@@ -152,7 +155,10 @@ class RacingGame {
         this.speed = 1;
         this.updateSpeedIndicator();
         
-        alert(`Game Over! Your score: ${this.score}`);
+        const gameOverMessage = document.querySelector('.game-over-message');
+        const finalScore = gameOverMessage.querySelector('.final-score');
+        finalScore.textContent = this.score;
+        gameOverMessage.style.display = 'block';
     }
 }
 

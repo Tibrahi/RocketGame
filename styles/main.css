@@ -112,6 +112,35 @@ button:hover {
     display: none;
 }
 
+.game-over-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    display: none;
+    z-index: 100;
+}
+
+.game-over-message h2 {
+    color: #ff4444;
+    margin-bottom: 10px;
+    font-size: 32px;
+}
+
+.game-over-message p {
+    color: white;
+    font-size: 24px;
+}
+
+.game-over-message .final-score {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
 @media (max-width: 768px) {
     .game-header {
         flex-direction: column;
