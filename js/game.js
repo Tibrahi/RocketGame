@@ -159,6 +159,10 @@ class RacingGame {
         const finalScore = gameOverMessage.querySelector('.final-score');
         finalScore.textContent = this.score;
         gameOverMessage.style.display = 'block';
+
+        // Update last game score
+        const lastScoreValue = document.querySelector('.last-score .score-value');
+        lastScoreValue.textContent = this.score;
     }
 }
 
