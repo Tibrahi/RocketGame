@@ -105,7 +105,7 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    transition: left 0.1s ease;
+    transition: left 0.1s ease, top 0.1s ease;
 }
 
 .rocket {
@@ -147,6 +147,18 @@ button:hover {
 
 .mobile-controls {
     display: none;
+}
+
+.vertical-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vertical-controls button {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
 }
 
 .game-over-message {
@@ -191,6 +203,7 @@ button:hover {
     .mobile-controls {
         display: flex;
         justify-content: center;
+        align-items: center;
         gap: 20px;
         margin-top: 20px;
     }

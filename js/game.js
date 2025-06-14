@@ -8,6 +8,8 @@ class RacingGame {
         this.startBtn = document.getElementById('startBtn');
         this.leftBtn = document.getElementById('leftBtn');
         this.rightBtn = document.getElementById('rightBtn');
+        this.upBtn = document.getElementById('upBtn');
+        this.downBtn = document.getElementById('downBtn');
         
         this.score = 0;
         this.speed = 1;
@@ -24,6 +26,8 @@ class RacingGame {
         this.startBtn.addEventListener('click', () => this.startGame());
         this.leftBtn.addEventListener('click', () => this.moveLeft());
         this.rightBtn.addEventListener('click', () => this.moveRight());
+        this.upBtn.addEventListener('click', () => this.moveUp());
+        this.downBtn.addEventListener('click', () => this.moveDown());
         
         document.addEventListener('keydown', (e) => {
             if (!this.isGameRunning) return;
@@ -35,36 +39,11 @@ class RacingGame {
         });
     }
     
-    startGame() {
-        if (this.isGameRunning) return;
-        
-        const gameOverMessage = document.querySelector('.game-over-message');
-        gameOverMessage.style.display = 'none';
-        
-        this.isGameRunning = true;
-        this.score = 0;
-        this.speed = 1;
-        this.scoreElement.textContent = this.score;
-        this.updateSpeedIndicator();
-        this.obstacles = [];
-        this.startBtn.textContent = 'Restart Game';
-        
-        this.gameLoop = setInterval(() => {
-            this.update();
-        }, 20);
-    }
-    
-    update() {
-        this.handleInput();
-        this.moveObstacles();
-        this.createObstacle();
-        this.checkCollision();
-        this.updateScore();
-    }
-    
     handleInput() {
         if (this.keys['ArrowLeft']) this.moveLeft();
         if (this.keys['ArrowRight']) this.moveRight();
+        if (this.keys['ArrowUp']) this.moveUp();
+        if (this.keys['ArrowDown']) this.moveDown();
     }
     
     moveLeft() {
@@ -84,6 +63,59 @@ class RacingGame {
         if (currentLeft < gameAreaWidth - playerWidth) {
             this.player.style.left = (currentLeft + moveAmount) + 'px';
         }
+    }
+    
+    moveUp() {
+        const currentBottom = parseInt(window.getComputedStyle(this.player).bottom);
+        const moveAmount = 10 * (this.speed / 3);
+        const gameAreaHeight = this.gameArea.offsetHeight;
+        const playerHeight = this.player.offsetHeight;
+        
+        if (currentBottom < gameAreaHeight - playerHeight) {
+            this.player.style.bottom = (currentBottom + moveAmount) + 'px';
+        }
+    }
+    
+    moveDown() {
+        const currentBottom = parseInt(window.getComputedStyle(this.player).bottom);
+        const moveAmount = 10 * (this.speed / 3);
+        
+        if (currentBottom > 20) { // Keep 20px from bottom
+            this.player.style.bottom = (currentBottom - moveAmount) + 'px';
+        }
+    }
+    
+    startGame() {
+        if (this.isGameRunning) return;
+        
+        const gameOverMessage = document.querySelector('.game-over-message');
+        gameOverMessage.style.display = 'none';
+        
+        this.isGameRunning = true;
+        this.score = 0;
+        this.speed = 1;
+        this.scoreElement.textContent = this.score;
+        this.updateSpeedIndicator();
+        this.obstacles = [];
+        this.startBtn.textContent = 'Restart Game';
+        
+        // Reset player position to bottom
+        this.player.style.bottom = '20px';
+        this.player.style.top = 'auto';
+        this.player.style.left = '50%';
+        this.player.style.transform = 'translateX(-50%)';
+        
+        this.gameLoop = setInterval(() => {
+            this.update();
+        }, 20);
+    }
+    
+    update() {
+        this.handleInput();
+        this.moveObstacles();
+        this.createObstacle();
+        this.checkCollision();
+        this.updateScore();
     }
     
     createObstacle() {
