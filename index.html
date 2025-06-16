@@ -8,43 +8,45 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <aside class="last-game-card">
-        <h3>Last Game</h3>
-        <div class="last-score">
-            <span class="score-label">Score:</span>
-            <span class="score-value">0</span>
-        </div>
-    </aside>
     <div class="game-container">
-        <div class="game-header">
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="speed-indicator">
-                Speed: <span id="speed">1</span>/12
-                <div class="speed-bar">
-                    <div class="speed-fill"></div>
+        <div class="game-content">
+            <div class="game-header">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="speed-indicator">
+                    Speed: <span id="speed">1</span>/12
+                    <div class="speed-bar">
+                        <div class="speed-fill"></div>
+                    </div>
+                </div>
+                <aside class="last-game-card">
+                    <h3>Last Game</h3>
+                    <div class="last-score">
+                        <span class="score-label">Score:</span>
+                        <span class="score-value">0</span>
+                    </div>
+                </aside>
+            </div>
+            <div class="game-area">
+                <div class="player">
+                    <svg class="rocket" viewBox="0 0 24 24">
+                        <path d="M12 2.5c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2 14l-2-2v-4h2v6zm0 4v-2h2v2h-2zm4-4h-2v-4l2-2v6zm0 4h-2v-2h2v2zm4-4h-2v-6l2 2v4zm0 4h-2v-2h2v2z"/>
+                    </svg>
+                </div>
+                <div class="game-over-message">
+                    <h2>Game Over!</h2>
+                    <p>Your score: <span class="final-score">0</span></p>
                 </div>
             </div>
-        </div>
-        <div class="game-area">
-            <div class="player">
-                <svg class="rocket" viewBox="0 0 24 24">
-                    <path d="M12 2.5c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2 14l-2-2v-4h2v6zm0 4v-2h2v2h-2zm4-4h-2v-4l2-2v6zm0 4h-2v-2h2v2zm4-4h-2v-6l2 2v4zm0 4h-2v-2h2v2z"/>
-                </svg>
-            </div>
-            <div class="game-over-message">
-                <h2>Game Over!</h2>
-                <p>Your score: <span class="final-score">0</span></p>
-            </div>
-        </div>
-        <div class="controls">
-            <button id="startBtn">Start Game</button>
-            <div class="mobile-controls">
-                <button id="leftBtn">←</button>
-                <div class="vertical-controls">
-                    <button id="upBtn">↑</button>
-                    <button id="downBtn">↓</button>
+            <div class="controls">
+                <button id="startBtn">Start Game</button>
+                <div class="mobile-controls">
+                    <button id="leftBtn">←</button>
+                    <div class="vertical-controls">
+                        <button id="upBtn">↑</button>
+                        <button id="downBtn">↓</button>
+                    </div>
+                    <button id="rightBtn">→</button>
                 </div>
-                <button id="rightBtn">→</button>
             </div>
         </div>
     </div>
