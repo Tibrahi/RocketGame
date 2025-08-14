@@ -13,9 +13,10 @@ class RacingGame {
         
         this.score = 0;
         this.speed = 1;
-        this.maxSpeed = 12;
+        this.maxSpeed = 24;
         this.gameLoop = null;
         this.obstacles = [];
+        this.obstaclesDodged = 0;
         this.isGameRunning = false;
         this.keys = {};
         
@@ -87,16 +88,15 @@ class RacingGame {
     
     startGame() {
         if (this.isGameRunning) return;
-        
         const gameOverMessage = document.querySelector('.game-over-message');
         gameOverMessage.style.display = 'none';
-        
         this.isGameRunning = true;
         this.score = 0;
         this.speed = 1;
         this.scoreElement.textContent = this.score;
         this.updateSpeedIndicator();
         this.obstacles = [];
+        this.obstaclesDodged = 0;
         this.startBtn.textContent = 'Restart Game';
         
         // Reset player position to bottom
@@ -124,6 +124,11 @@ class RacingGame {
             obstacle.classList.add('obstacle');
             obstacle.style.left = Math.random() * (this.gameArea.offsetWidth - 40) + 'px';
             obstacle.style.top = '-40px';
+            // Make some obstacles red
+            if (Math.random() < 0.5) {
+                obstacle.style.background = 'red';
+                obstacle.classList.add('red-obstacle');
+            }
             this.gameArea.appendChild(obstacle);
             this.obstacles.push(obstacle);
         }
@@ -136,6 +141,15 @@ class RacingGame {
             obstacle.style.top = (currentTop + moveAmount) + 'px';
             
             if (currentTop > this.gameArea.offsetHeight) {
+                // Only count red obstacles for score and speed
+                if (obstacle.classList.contains('red-obstacle')) {
+                    this.score++;
+                    this.scoreElement.textContent = this.score;
+                    if (this.speed < this.maxSpeed) {
+                        this.speed++;
+                        this.updateSpeedIndicator();
+                    }
+                }
                 obstacle.remove();
                 this.obstacles.splice(index, 1);
             }
@@ -162,13 +176,7 @@ class RacingGame {
     }
     
     updateScore() {
-        this.score++;
-        this.scoreElement.textContent = this.score;
-        
-        if (this.score % 100 === 0 && this.speed < this.maxSpeed) {
-            this.speed++;
-            this.updateSpeedIndicator();
-        }
+        // Score is now updated only when a red obstacle passes
     }
     
     updateSpeedIndicator() {
