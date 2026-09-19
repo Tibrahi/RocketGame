@@ -16,9 +16,11 @@ class RacingGame {
         this.maxSpeed = 24;
         this.gameLoop = null;
         this.obstacles = [];
+        this.projectiles = []; // Added for firing red projectiles
         this.obstaclesDodged = 0;
         this.isGameRunning = false;
         this.keys = {};
+        this.isBoosting = false; // Tracks shift/boost state
         
         this.init();
     }
@@ -33,42 +35,56 @@ class RacingGame {
         document.addEventListener('keydown', (e) => {
             if (!this.isGameRunning) return;
             this.keys[e.key] = true;
+            
+            // Activate boost on Shift key
+            if (e.key === 'Shift') {
+                this.isBoosting = true;
+            }
+            
+            // Fire red projectile on Spacebar
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                this.fireProjectile();
+            }
         });
         
         document.addEventListener('keyup', (e) => {
             this.keys[e.key] = false;
+            if (e.key === 'Shift') {
+                this.isBoosting = false;
+            }
         });
     }
     
     handleInput() {
-        if (this.keys['ArrowLeft']) this.moveLeft();
-        if (this.keys['ArrowRight']) this.moveRight();
-        if (this.keys['ArrowUp']) this.moveUp();
-        if (this.keys['ArrowDown']) this.moveDown();
+        const boostMultiplier = this.isBoosting ? 2.0 : 1.0;
+        if (this.keys['ArrowLeft'] || this.keys['a']) this.moveLeft(boostMultiplier);
+        if (this.keys['ArrowRight'] || this.keys['d']) this.moveRight(boostMultiplier);
+        if (this.keys['ArrowUp'] || this.keys['w']) this.moveUp(boostMultiplier);
+        if (this.keys['ArrowDown'] || this.keys['s']) this.moveDown(boostMultiplier);
     }
     
-    moveLeft() {
+    moveLeft(multiplier = 1.0) {
         const currentLeft = parseInt(window.getComputedStyle(this.player).left);
-        const moveAmount = 10 * (this.speed / 3);
+        const moveAmount = 10 * (this.speed / 3) * multiplier;
         if (currentLeft > 0) {
             this.player.style.left = (currentLeft - moveAmount) + 'px';
         }
     }
     
-    moveRight() {
+    moveRight(multiplier = 1.0) {
         const currentLeft = parseInt(window.getComputedStyle(this.player).left);
         const gameAreaWidth = this.gameArea.offsetWidth;
         const playerWidth = this.player.offsetWidth;
-        const moveAmount = 10 * (this.speed / 3);
+        const moveAmount = 10 * (this.speed / 3) * multiplier;
         
         if (currentLeft < gameAreaWidth - playerWidth) {
             this.player.style.left = (currentLeft + moveAmount) + 'px';
         }
     }
     
-    moveUp() {
+    moveUp(multiplier = 1.0) {
         const currentBottom = parseInt(window.getComputedStyle(this.player).bottom);
-        const moveAmount = 10 * (this.speed / 3);
+        const moveAmount = 10 * (this.speed / 3) * multiplier;
         const gameAreaHeight = this.gameArea.offsetHeight;
         const playerHeight = this.player.offsetHeight;
         
@@ -77,13 +93,34 @@ class RacingGame {
         }
     }
     
-    moveDown() {
+    moveDown(multiplier = 1.0) {
         const currentBottom = parseInt(window.getComputedStyle(this.player).bottom);
-        const moveAmount = 10 * (this.speed / 3);
+        const moveAmount = 10 * (this.speed / 3) * multiplier;
         
-        if (currentBottom > 20) { // Keep 20px from bottom
+        if (currentBottom > 20) {
             this.player.style.bottom = (currentBottom - moveAmount) + 'px';
         }
+    }
+
+    fireProjectile() {
+        const projectile = document.createElement('div');
+        projectile.classList.add('projectile');
+        // Style the firing projectile red as requested
+        projectile.style.position = 'absolute';
+        projectile.style.width = '6px';
+        projectile.style.height = '14px';
+        projectile.style.backgroundColor = 'red';
+        projectile.style.borderRadius = '3px';
+        projectile.style.boxShadow = '0 0 8px red';
+        
+        const playerLeft = parseInt(window.getComputedStyle(this.player).left);
+        const playerBottom = parseInt(window.getComputedStyle(this.player).bottom);
+        
+        projectile.style.left = (playerLeft + (this.player.offsetWidth / 2) - 3) + 'px';
+        projectile.style.bottom = (playerBottom + this.player.offsetHeight) + 'px';
+        
+        this.gameArea.appendChild(projectile);
+        this.projectiles.push(projectile);
     }
     
     startGame() {
@@ -95,7 +132,12 @@ class RacingGame {
         this.speed = 1;
         this.scoreElement.textContent = this.score;
         this.updateSpeedIndicator();
+        
+        // Clean up previous elements
+        this.obstacles.forEach(obs => obs.remove());
+        this.projectiles.forEach(proj => proj.remove());
         this.obstacles = [];
+        this.projectiles = [];
         this.obstaclesDodged = 0;
         this.startBtn.textContent = 'Restart Game';
         
@@ -113,9 +155,9 @@ class RacingGame {
     update() {
         this.handleInput();
         this.moveObstacles();
+        this.moveProjectiles();
         this.createObstacle();
         this.checkCollision();
-        this.updateScore();
     }
     
     createObstacle() {
@@ -124,7 +166,6 @@ class RacingGame {
             obstacle.classList.add('obstacle');
             obstacle.style.left = Math.random() * (this.gameArea.offsetWidth - 40) + 'px';
             obstacle.style.top = '-40px';
-            // Make some obstacles red
             if (Math.random() < 0.5) {
                 obstacle.style.background = 'red';
                 obstacle.classList.add('red-obstacle');
@@ -137,11 +178,10 @@ class RacingGame {
     moveObstacles() {
         this.obstacles.forEach((obstacle, index) => {
             const currentTop = parseInt(window.getComputedStyle(obstacle).top);
-            const moveAmount = this.speed * 2;
+            const moveAmount = this.speed * (this.isBoosting ? 2.5 : 2);
             obstacle.style.top = (currentTop + moveAmount) + 'px';
             
             if (currentTop > this.gameArea.offsetHeight) {
-                // Only count red obstacles for score and speed
                 if (obstacle.classList.contains('red-obstacle')) {
                     this.score++;
                     this.scoreElement.textContent = this.score;
@@ -155,13 +195,39 @@ class RacingGame {
             }
         });
     }
+
+    moveProjectiles() {
+        this.projectiles.forEach((projectile, pIndex) => {
+            const currentBottom = parseInt(window.getComputedStyle(projectile).bottom);
+            projectile.style.bottom = (currentBottom + 16) + 'px';
+
+            // Check collision with obstacles
+            const projRect = projectile.getBoundingClientRect();
+            this.obstacles.forEach((obstacle, oIndex) => {
+                const obsRect = obstacle.getBoundingClientRect();
+                if (this.isColliding(projRect, obsRect)) {
+                    // Destroy both projectile and obstacle
+                    projectile.remove();
+                    this.projectiles.splice(pIndex, 1);
+                    obstacle.remove();
+                    this.obstacles.splice(oIndex, 1);
+                    this.score += 2; // Bonus score for shooting objects
+                    this.scoreElement.textContent = this.score;
+                }
+            });
+
+            // Remove if out of bounds
+            if (currentBottom > this.gameArea.offsetHeight) {
+                projectile.remove();
+                this.projectiles.splice(pIndex, 1);
+            }
+        });
+    }
     
     checkCollision() {
         const playerRect = this.player.getBoundingClientRect();
-        
         this.obstacles.forEach((obstacle) => {
             const obstacleRect = obstacle.getBoundingClientRect();
-            
             if (this.isColliding(playerRect, obstacleRect)) {
                 this.gameOver();
             }
@@ -173,10 +239,6 @@ class RacingGame {
                 rect1.left > rect2.right || 
                 rect1.bottom < rect2.top || 
                 rect1.top > rect2.bottom);
-    }
-    
-    updateScore() {
-        // Score is now updated only when a red obstacle passes
     }
     
     updateSpeedIndicator() {
@@ -191,8 +253,11 @@ class RacingGame {
         this.startBtn.textContent = 'Start Game';
         
         this.obstacles.forEach(obstacle => obstacle.remove());
+        this.projectiles.forEach(proj => proj.proj.remove());
         this.obstacles = [];
+        this.projectiles = [];
         this.speed = 1;
+        this.isBoosting = false;
         this.updateSpeedIndicator();
         
         const gameOverMessage = document.querySelector('.game-over-message');
@@ -200,13 +265,11 @@ class RacingGame {
         finalScore.textContent = this.score;
         gameOverMessage.style.display = 'block';
 
-        // Update last game score
         const lastScoreValue = document.querySelector('.last-score .score-value');
         lastScoreValue.textContent = this.score;
     }
 }
 
-// Initialize the game when the page loads
 window.addEventListener('load', () => {
     new RacingGame();
 });
