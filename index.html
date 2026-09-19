@@ -1,781 +1,720 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100 font-sans">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rocket Space Shooter - Pro Edition</title>
+    <title>AeroStrike Pro - 3D Flight Combat Edition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- FontAwesome Icons CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
             overflow: hidden;
             user-select: none;
         }
         .font-orbitron {
             font-family: 'Orbitron', sans-serif;
         }
-        /* Glassmorphism custom styling */
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
         .glass-panel {
             background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .glass-panel-accent {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.25);
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
         }
-        /* Glowing effects */
-        .glow-cyan {
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        .glow-red {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
         }
-        .glow-rose {
-            box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(56, 189, 248, 0.5);
-            border-radius: 4px;
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="h-full w-full relative flex flex-col md:flex-row overflow-hidden bg-slate-950 text-slate-100">
+<body class="h-screen w-screen flex flex-col justify-between relative">
 
-    <!-- 3D ThreeJS Rendering Canvas -->
-    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0"></div>
+    <!-- 3D Three.js Background/System Canvas -->
+    <canvas id="three-canvas"></canvas>
 
-    <!-- Player Registration Modal (Modal Onboarding Screen) -->
-    <div id="player-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-        <div class="glass-panel-accent w-full max-w-md rounded-2xl p-6 sm:p-8 shadow-2xl relative border border-cyan-500/30 transform transition-all duration-300">
+    <!-- 1. Player Details / Login Modal (Initial Screen) -->
+    <div id="player-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-500">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-indigo-500/30 transform transition-all animate-pulse-slow">
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 text-cyan-400 mb-3 border border-cyan-500/30 glow-cyan">
-                    <i class="fa-solid fa-rocket text-3xl"></i>
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-black font-orbitron tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400">
-                    ASTRO-RACER
-                </h1>
-                <p class="text-xs text-slate-400 tracking-widest uppercase mt-1">Professional Flight Simulator</p>
+                <span class="bg-indigo-500/10 text-indigo-400 text-xs font-orbitron px-3 py-1 rounded-full uppercase tracking-widest border border-indigo-500/20">AeroStrike Engine v3.5</span>
+                <h1 class="text-3xl font-black font-orbitron mt-3 tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-purple-400">PILOT REGISTRATION</h1>
+                <p class="text-gray-400 text-sm mt-1">Enter your callsign to initialize flight systems.</p>
             </div>
-
             <form id="player-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-1">Pilot Name</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-user-astronaut absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="text" id="input-pilot-name" required placeholder="Captain Alex" value="Captain Alex"
-                            class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyan-400 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all">
-                    </div>
+                    <label class="block text-xs font-orbitron tracking-wider text-gray-300 mb-2">PILOT CALLSIGN</label>
+                    <input type="text" id="player-callsign" required placeholder="e.g. Maverick" maxlength="15"
+                        class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition font-orbitron tracking-wide">
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-1">Starship Call-Sign</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-shuttle-space absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="text" id="input-ship-name" required placeholder="Vanguard-X" value="Phoenix-01"
-                            class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyan-400 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-all">
-                    </div>
+                    <label class="block text-xs font-orbitron tracking-wider text-gray-300 mb-2">SQUADRON / RANK</label>
+                    <select id="player-rank" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition font-orbitron tracking-wide">
+                        <option value="Flight Cadet">Flight Cadet</option>
+                        <option value="Squadron Leader" selected>Squadron Leader</option>
+                        <option value="Wing Commander">Wing Commander</option>
+                        <option value="Top Gun Ace">Top Gun Ace</option>
+                    </select>
                 </div>
-
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs font-semibold uppercase tracking-wider text-cyan-300">Initial Warp Speed (1 - 24)</label>
-                        <span id="speed-slider-val" class="font-orbitron text-xs text-cyan-400 font-bold">1 Units</span>
-                    </div>
-                    <input type="range" id="input-initial-speed" min="1" max="24" value="1"
-                        class="w-full accent-cyan-400 bg-slate-800 h-2 rounded-lg cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">
-                        <i class="fa-solid fa-circle-info text-cyan-400 mr-1"></i> You maintain full manual control over your engine speed during flight.
-                    </p>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl font-orbitron font-bold text-sm tracking-wider uppercase bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/25 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
-                        Launch Mission <i class="fa-solid fa-paper-plane ml-2"></i>
-                    </button>
-                </div>
+                <button type="submit" class="w-full mt-2 py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white font-orbitron font-bold tracking-widest uppercase hover:brightness-110 active:scale-[0.98] transition shadow-lg shadow-indigo-600/30">
+                    Initialize Cockpit
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- Main Game Interface -->
-    <div id="game-ui" class="relative z-10 w-full h-full flex flex-col md:flex-row pointer-events-none opacity-0 transition-opacity duration-500">
+    <!-- Main Game Wrapper -->
+    <div id="game-wrapper" class="relative z-10 flex flex-col h-full w-full max-w-7xl mx-auto p-4 md:p-6 opacity-0 pointer-events-none transition-opacity duration-700">
         
-        <!-- Left / Top Flight Dashboard -->
-        <aside class="w-full md:w-80 p-4 flex flex-col gap-3 pointer-events-auto z-20">
-            <!-- Pilot Profile Card -->
-            <div class="glass-panel rounded-xl p-4 border border-slate-800">
-                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-id-card text-cyan-400"></i>
-                        <span class="font-orbitron text-xs font-bold tracking-wider text-slate-200 uppercase">Pilot Profile</span>
-                    </div>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span> READY
-                    </span>
+        <!-- Top Navigation / Header -->
+        <header class="flex flex-col md:flex-row items-center justify-between gap-4 glass-panel px-6 py-4 rounded-2xl shadow-xl">
+            <div class="flex items-center space-x-4">
+                <div class="h-10 w-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-orbitron font-bold text-xl glow-effect">
+                    ✈️
                 </div>
-                <div class="space-y-1.5 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Commander:</span>
-                        <span id="disp-pilot-name" class="font-semibold text-slate-200">Captain Alex</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Call-sign:</span>
-                        <span id="disp-ship-name" class="font-semibold text-cyan-400 font-orbitron">Phoenix-01</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">High Score:</span>
-                        <span id="disp-high-score" class="font-bold text-amber-400 font-orbitron">0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Last Mission Score -->
-            <div class="glass-panel rounded-xl p-4 border border-slate-800 flex justify-between items-center">
                 <div>
-                    <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Last Flight Score</div>
-                    <div id="disp-last-score" class="font-orbitron text-xl font-bold text-slate-200">0</div>
-                </div>
-                <div class="p-2.5 rounded-lg bg-slate-800/80 text-cyan-400">
-                    <i class="fa-solid fa-trophy text-lg"></i>
+                    <div class="text-xs text-indigo-400 font-orbitron tracking-wider">ACTIVE PILOT</div>
+                    <div id="display-callsign" class="text-lg font-bold font-orbitron text-white">---</div>
                 </div>
             </div>
 
-            <!-- Flight Telemetry HUD -->
-            <div class="glass-panel rounded-xl p-4 border border-slate-800 space-y-4">
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs uppercase font-orbitron font-bold text-slate-300">Score</span>
-                        <span id="disp-current-score" class="font-orbitron text-2xl font-black text-cyan-400">0</span>
-                    </div>
+            <!-- Score & Stats -->
+            <div class="flex items-center space-x-8">
+                <div class="text-center">
+                    <div class="text-xs text-gray-400 font-orbitron tracking-wider">SCORE</div>
+                    <div id="score" class="text-2xl font-black font-orbitron text-sky-400">0</div>
                 </div>
-
-                <!-- Interactive Speed Control Bar -->
-                <div>
-                    <div class="flex justify-between items-center mb-1.5">
-                        <span class="text-xs font-orbitron font-bold text-slate-300">Warp Speed Level</span>
-                        <span class="font-orbitron text-xs text-sky-400"><span id="disp-speed-num">1</span> / 24</span>
-                    </div>
-                    <div class="w-full bg-slate-900 rounded-full h-3 p-0.5 border border-slate-700/80 mb-2">
-                        <div id="speed-progress-fill" class="bg-gradient-to-r from-sky-500 to-cyan-400 h-full rounded-full transition-all duration-300 shadow-sm" style="width: 4%;"></div>
-                    </div>
-                    
-                    <!-- Manual User Speed Management Controls -->
-                    <div class="flex items-center gap-2">
-                        <button id="btn-speed-down" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-orbitron text-xs font-bold border border-slate-700 transition active:bg-slate-600">
-                            <i class="fa-solid fa-minus text-[10px] mr-1"></i> DEC
-                        </button>
-                        <button id="btn-speed-up" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 font-orbitron text-xs font-bold border border-slate-700 transition active:bg-slate-600">
-                            INC <i class="fa-solid fa-plus text-[10px] ml-1"></i>
-                        </button>
-                    </div>
+                <div class="text-center">
+                    <div class="text-xs text-gray-400 font-orbitron tracking-wider">AIRBORNE TIME</div>
+                    <div id="timer" class="text-2xl font-black font-orbitron text-purple-400">00:00</div>
                 </div>
-
-                <!-- Boost indicator -->
-                <div class="flex items-center justify-between pt-1 border-t border-slate-800">
-                    <span class="text-xs text-slate-400">Thruster Boost:</span>
-                    <span id="disp-boost-status" class="text-xs font-orbitron font-bold text-slate-500">READY (SHIFT)</span>
+                <div class="text-center">
+                    <div class="text-xs text-gray-400 font-orbitron tracking-wider">HULL SHIELD</div>
+                    <div id="shield-status" class="text-xl font-black font-orbitron text-emerald-400">100%</div>
                 </div>
             </div>
 
-            <!-- Controls Guide -->
-            <div class="hidden md:block glass-panel rounded-xl p-3 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-                <div class="font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-                    <i class="fa-solid fa-keyboard text-cyan-400"></i> Controls Checklist:
+            <!-- Speed Control System (Manual User Controlled) -->
+            <div class="flex flex-col w-full md:w-64">
+                <div class="flex justify-between items-center text-xs font-orbitron mb-1">
+                    <span class="text-gray-400">THROTTLE SPEED: <span id="speed-val" class="text-white font-bold">1</span>/24</span>
+                    <span id="boost-status" class="text-indigo-400 font-bold hidden">BOOSTING ACTIVE</span>
                 </div>
-                <div><span class="text-slate-200 font-semibold">W, A, S, D / Arrows:</span> Maneuver</div>
-                <div><span class="text-slate-200 font-semibold">Spacebar:</span> Fire Laser Cannon</div>
-                <div><span class="text-slate-200 font-semibold">Shift Key:</span> Nitro Boost Thruster</div>
-                <div><span class="text-slate-200 font-semibold">Mouse Drag:</span> Adjust Camera Angle</div>
+                <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
+                    <div id="speed-fill" class="bg-gradient-to-r from-sky-500 to-indigo-500 h-full rounded-full transition-all duration-150" style="width: 4.16%;"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-gray-500 font-orbitron mt-1">
+                    <span>[W/↑] ACCEL</span>
+                    <span>[S/↓] BRAKE</span>
+                    <span>[SHIFT] AFTERBURN</span>
+                </div>
             </div>
-        </aside>
+        </header>
 
-        <!-- Central Game Canvas View & On-Screen Controls -->
-        <main class="flex-1 relative flex flex-col justify-between p-4 pointer-events-none">
+        <!-- Central Workspace: Game Area & Aside Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 my-4 flex-grow overflow-hidden">
             
-            <!-- Top Controls Center Button -->
-            <div class="flex justify-center items-center pointer-events-auto z-20">
-                <button id="btn-start-game" class="px-8 py-3 rounded-full font-orbitron font-extrabold text-sm uppercase tracking-wider bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 shadow-lg shadow-cyan-500/30 transition-all transform hover:scale-105 active:scale-95 border border-cyan-300/40">
-                    <i class="fa-solid fa-play mr-2"></i> Start Flight
+            <!-- Aside Details Panel -->
+            <aside class="glass-panel rounded-2xl p-5 flex flex-col justify-between shadow-xl order-2 lg:order-1">
+                <div>
+                    <h3 class="text-sm font-orbitron font-bold tracking-wider text-indigo-400 flex items-center gap-2 mb-4">
+                        <span>📊</span> FLIGHT TELEMETRY
+                    </h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div class="text-xs text-gray-400 font-orbitron">LAST MISSION SCORE</div>
+                            <div id="last-score" class="text-xl font-bold font-orbitron text-white mt-1">0 PTS</div>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div class="text-xs text-gray-400 font-orbitron">BEST ACE RECORD</div>
+                            <div id="high-score" class="text-xl font-bold font-orbitron text-amber-400 mt-1">0 PTS</div>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div class="text-xs text-gray-400 font-orbitron">WEAPONS SYSTEM</div>
+                            <div class="text-sm font-bold font-orbitron text-emerald-400 mt-1">DUAL BLASTER [ONLINE]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Quick Tips -->
+                <div class="bg-indigo-950/30 border border-indigo-500/20 p-3 rounded-xl">
+                    <div class="text-xs font-orbitron font-bold text-indigo-300 mb-1">COMMAND MANUAL</div>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• <strong class="text-gray-200">A/D or ←/→</strong> : Bank Left/Right</li>
+                        <li>• <strong class="text-gray-200">W/S or ↑/↓</strong> : Throttle Up/Down</li>
+                        <li>• <strong class="text-gray-200">SPACE</strong> : Fire Plasma Projectiles</li>
+                        <li>• <strong class="text-gray-200">SHIFT</strong> : High-Speed Boost</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Game Area with Plane & Obstacles -->
+            <div id="game-area" class="glass-panel rounded-2xl relative overflow-hidden lg:col-span-3 flex items-center justify-center shadow-2xl border border-slate-700/50 order-1 lg:order-2">
+                
+                <!-- Background Grid Animation Effect -->
+                <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+
+                <!-- Firing/Weapon Style Object mounted Upper relative to Airplane -->
+                <div id="player" class="absolute bottom-6 left-1/2 -translate-x-1/2 w-16 h-20 z-20 flex flex-col items-center transition-transform duration-75">
+                    <!-- Upper Firing Turret / Style Object indicator -->
+                    <div class="absolute -top-3 w-3 h-4 bg-rose-500 rounded-full glow-red animate-pulse flex items-center justify-center">
+                        <div class="w-1.5 h-2 bg-yellow-200 rounded-full"></div>
+                    </div>
+                    <!-- Airplane Body Graphics -->
+                    <svg class="w-full h-full drop-shadow-[0_10px_15px_rgba(99,102,241,0.5)]" viewBox="0 0 24 24" fill="currentColor">
+                        <path class="text-indigo-500" d="M12 2.5c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2 14l-2-2v-4h2v6zm0 4v-2h2v2h-2zm4-4h-2v-4l2-2v6zm0 4h-2v-2h2v2zm4-4h-2v-6l2 2v4zm0 4h-2v-2h2v2z"/>
+                        <path class="text-sky-400" d="M12 2L4 14h6v3h4v-3h6L12 2z"/>
+                    </svg>
+                    <!-- Afterburner Engine Flame -->
+                    <div id="afterburner" class="w-4 h-8 bg-gradient-to-t from-transparent via-cyan-400 to-indigo-500 rounded-full blur-[2px] opacity-80 -mt-2 transition-all"></div>
+                </div>
+
+                <!-- Game Over Overlay Screen -->
+                <div id="game-over-screen" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center z-40 hidden transition-all">
+                    <div class="glass-panel p-8 rounded-3xl text-center max-w-sm mx-4 border border-rose-500/30 glow-red">
+                        <span class="bg-rose-500/10 text-rose-400 text-xs font-orbitron px-3 py-1 rounded-full uppercase tracking-widest border border-rose-500/20">Mission Failed</span>
+                        <h2 class="text-4xl font-black font-orbitron text-white mt-3 tracking-wider">CRASHED!</h2>
+                        <p class="text-gray-400 text-sm mt-2">Your aircraft suffered fatal impact.</p>
+                        
+                        <div class="my-6 bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                            <div class="text-xs text-gray-400 font-orbitron">FINAL MISSION SCORE</div>
+                            <div id="final-score" class="text-3xl font-black font-orbitron text-sky-400 mt-1">0</div>
+                        </div>
+
+                        <button id="retry-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-orbitron font-bold tracking-widest uppercase hover:brightness-110 active:scale-[0.98] transition shadow-lg shadow-rose-600/30">
+                            Relaunch Mission
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Start overlay overlay inside game area before user click start -->
+                <div id="start-overlay" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+                    <button id="start-btn" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-sky-500 to-indigo-700 text-white font-orbitron font-extrabold text-xl tracking-widest uppercase glow-effect hover:scale-105 active:scale-95 transition shadow-2xl">
+                        🚀 Launch Mission
+                    </button>
+                    <p class="text-xs text-gray-400 font-orbitron mt-4">Manual speed control enabled via keyboard or controls</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile / Alternative On-screen Controls Bar -->
+        <footer class="glass-panel px-6 py-3 rounded-2xl flex items-center justify-between shadow-xl">
+            <div class="flex items-center space-x-2">
+                <button id="left-btn" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg active:bg-indigo-600 transition flex items-center justify-center">←</button>
+                <button id="right-btn" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg active:bg-indigo-600 transition flex items-center justify-center">→</button>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="fire-btn" class="px-6 h-12 rounded-xl bg-rose-600/30 border border-rose-500/50 text-rose-300 font-orbitron font-bold text-xs uppercase tracking-wider active:bg-rose-600 active:text-white transition flex items-center justify-center">
+                    🔥 Fire Blaster
+                </button>
+                <button id="boost-btn" class="px-6 h-12 rounded-xl bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 font-orbitron font-bold text-xs uppercase tracking-wider active:bg-indigo-600 active:text-white transition flex items-center justify-center">
+                    ⚡ Afterburner
                 </button>
             </div>
 
-            <!-- Game Over Banner Overlay -->
-            <div id="game-over-modal" class="hidden absolute inset-0 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm pointer-events-auto z-30">
-                <div class="glass-panel-accent max-w-sm w-full rounded-2xl p-6 text-center border border-rose-500/40 shadow-2xl glow-rose transform transition-all animate-bounce-once">
-                    <div class="w-14 h-14 mx-auto rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/30 mb-3">
-                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-black font-orbitron text-rose-400 uppercase tracking-wide">Hull Destroyed!</h2>
-                    <p class="text-xs text-slate-300 mt-1 mb-4">Spacecraft collided with field debris.</p>
-
-                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 mb-5">
-                        <div class="text-xs text-slate-400 uppercase">Final Flight Score</div>
-                        <div id="game-over-score" class="font-orbitron text-3xl font-black text-cyan-400 my-0.5">0</div>
-                    </div>
-
-                    <button id="btn-restart-game" class="w-full py-3 rounded-xl font-orbitron font-bold text-xs uppercase tracking-wider bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-lg shadow-rose-500/30 transition transform hover:-translate-y-0.5">
-                        <i class="fa-solid fa-rotate-right mr-2"></i> Re-Launch Starship
-                    </button>
-                </div>
+            <div class="flex items-center space-x-2">
+                <button id="up-btn" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg active:bg-indigo-600 transition flex items-center justify-center">↑</button>
+                <button id="down-btn" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg active:bg-indigo-600 transition flex items-center justify-center">↓</button>
             </div>
-
-            <!-- Touch / Mobile Screen Controls Overlay -->
-            <div class="md:hidden flex flex-col items-center gap-3 pointer-events-auto z-20 pb-2">
-                <div class="flex items-center gap-4">
-                    <button id="btn-mobile-fire" class="w-14 h-14 rounded-full bg-rose-500/20 active:bg-rose-500/40 border border-rose-500/50 text-rose-400 text-xl flex items-center justify-center shadow-lg active:scale-95">
-                        <i class="fa-solid fa-crosshairs"></i>
-                    </button>
-                    <button id="btn-mobile-boost" class="px-5 py-3 rounded-full bg-amber-500/20 active:bg-amber-500/40 border border-amber-500/50 text-amber-300 font-orbitron text-xs font-bold flex items-center justify-center shadow-lg active:scale-95">
-                        <i class="fa-solid fa-bolt mr-1"></i> BOOST
-                    </button>
-                </div>
-
-                <!-- D-Pad Controls -->
-                <div class="grid grid-cols-3 gap-2 w-44">
-                    <div></div>
-                    <button id="btn-mobile-up" class="w-12 h-12 rounded-xl bg-slate-800/80 active:bg-cyan-500/40 border border-slate-700 text-slate-200 text-lg flex items-center justify-center m-auto">
-                        <i class="fa-solid fa-chevron-up"></i>
-                    </button>
-                    <div></div>
-                    <button id="btn-mobile-left" class="w-12 h-12 rounded-xl bg-slate-800/80 active:bg-cyan-500/40 border border-slate-700 text-slate-200 text-lg flex items-center justify-center m-auto">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <button id="btn-mobile-down" class="w-12 h-12 rounded-xl bg-slate-800/80 active:bg-cyan-500/40 border border-slate-700 text-slate-200 text-lg flex items-center justify-center m-auto">
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </button>
-                    <button id="btn-mobile-right" class="w-12 h-12 rounded-xl bg-slate-800/80 active:bg-cyan-500/40 border border-slate-700 text-slate-200 text-lg flex items-center justify-center m-auto">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </main>
+        </footer>
     </div>
 
+    <!-- Application JavaScript Integration -->
     <script>
-        /* Modern Sound Synthesis via Web Audio API */
-        class SoundFX {
-            constructor() {
-                this.ctx = null;
+        // --- Three.js Background & Visual System ---
+        let scene, camera, renderer, starMesh;
+        function initThreeJS() {
+            const canvas = document.getElementById('three-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Create Starfield particle system
+            const starCount = 1200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(starCount * 3);
+
+            for(let i = 0; i < starCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 400;
+                positions[i+1] = (Math.random() - 0.5) * 400;
+                positions[i+2] = (Math.random() - 0.5) * 400 - 100;
             }
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            }
-            playLaser() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
-            }
-            playExplosion() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.3);
-            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({
+                color: 0x818cf8,
+                size: 1.2,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            starMesh = new THREE.Points(geometry, material);
+            scene.add(starMesh);
+            camera.position.z = 50;
+
+            window.addEventListener('resize', onWindowResize);
         }
 
-        class RocketGame3D {
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animateThreeJS(speedMultiplier) {
+            if (starMesh) {
+                const positions = starMesh.geometry.attributes.position.array;
+                for(let i = 2; i < positions.length; i += 3) {
+                    positions[i] += 0.5 * speedMultiplier;
+                    if (positions[i] > 50) {
+                        positions[i] = -350;
+                    }
+                }
+                starMesh.geometry.attributes.position.needsUpdate = true;
+                starMesh.rotation.z += 0.0005 * speedMultiplier;
+            }
+            renderer.render(scene, camera);
+        }
+
+        // --- Game Engine Class ---
+        class AeroStrikeGame {
             constructor() {
-                this.container = document.getElementById('canvas-container');
-                this.sound = new SoundFX();
-
-                // Game state
-                this.isRunning = false;
+                this.playerData = { callsign: 'Maverick', rank: 'Squadron Leader' };
                 this.score = 0;
-                this.highScore = localStorage.getItem('astro_high_score') || 0;
-                this.speed = 1;
+                this.highScore = localStorage.getItem('aerostrike_highscore') || 0;
+                this.lastScore = localStorage.getItem('aerostrike_lastscore') || 0;
+                this.speed = 1;         // User managed speed between 1 and 24
                 this.maxSpeed = 24;
+                this.isGameRunning = false;
                 this.isBoosting = false;
-                this.pilotName = 'Captain Alex';
-                this.shipName = 'Phoenix-01';
-
-                // Controls state
                 this.keys = {};
-                this.mobileControls = { left: false, right: false, up: false, down: false };
-
-                // Game objects
-                this.asteroids = [];
+                this.obstacles = [];
                 this.projectiles = [];
-                this.particles = [];
-                this.stars = null;
+                this.gameStartTime = 0;
+                this.timerInterval = null;
 
-                // Mouse Drag Camera control
-                this.isMouseDown = false;
-                this.previousMousePosition = { x: 0, y: 0 };
-                this.cameraAngle = { x: 0, y: 0 };
+                // DOM Elements
+                this.dom = {
+                    modal: document.getElementById('player-modal'),
+                    form: document.getElementById('player-form'),
+                    callsignInput: document.getElementById('player-callsign'),
+                    rankSelect: document.getElementById('player-rank'),
+                    wrapper: document.getElementById('game-wrapper'),
+                    displayCallsign: document.getElementById('display-callsign'),
+                    score: document.getElementById('score'),
+                    timer: document.getElementById('timer'),
+                    shieldStatus: document.getElementById('shield-status'),
+                    speedVal: document.getElementById('speed-val'),
+                    speedFill: document.getElementById('speed-fill'),
+                    boostStatus: document.getElementById('boost-status'),
+                    lastScore: document.getElementById('last-score'),
+                    highScore: document.getElementById('high-score'),
+                    gameArea: document.getElementById('game-area'),
+                    player: document.getElementById('player'),
+                    afterburner: document.getElementById('afterburner'),
+                    startOverlay: document.getElementById('start-overlay'),
+                    startBtn: document.getElementById('start-btn'),
+                    gameOverScreen: document.getElementById('game-over-screen'),
+                    finalScore: document.getElementById('final-score'),
+                    retryBtn: document.getElementById('retry-btn'),
+                    leftBtn: document.getElementById('left-btn'),
+                    rightBtn: document.getElementById('right-btn'),
+                    upBtn: document.getElementById('up-btn'),
+                    downBtn: document.getElementById('down-btn'),
+                    fireBtn: document.getElementById('fire-btn'),
+                    boostBtn: document.getElementById('boost-btn')
+                };
 
                 this.initUI();
-                this.initThree();
-                this.setupEventListeners();
             }
 
             initUI() {
-                // UI Elements
-                this.modal = document.getElementById('player-modal');
-                this.gameUI = document.getElementById('game-ui');
-                this.gameOverModal = document.getElementById('game-over-modal');
-                this.speedSlider = document.getElementById('input-initial-speed');
-                this.speedSliderVal = document.getElementById('speed-slider-val');
+                this.dom.lastScore.textContent = `${this.lastScore} PTS`;
+                this.dom.highScore.textContent = `${this.highScore} PTS`;
 
-                this.dispPilotName = document.getElementById('disp-pilot-name');
-                this.dispShipName = document.getElementById('disp-ship-name');
-                this.dispHighScore = document.getElementById('disp-high-score');
-                this.dispLastScore = document.getElementById('disp-last-score');
-                this.dispCurrentScore = document.getElementById('disp-current-score');
-                this.dispSpeedNum = document.getElementById('disp-speed-num');
-                this.speedProgressFill = document.getElementById('speed-progress-fill');
-                this.dispBoostStatus = document.getElementById('disp-boost-status');
-                this.gameOverScore = document.getElementById('game-over-score');
-
-                this.dispHighScore.textContent = this.highScore;
-
-                // Speed slider listener
-                this.speedSlider.addEventListener('input', (e) => {
-                    this.speedSliderVal.textContent = `${e.target.value} Units`;
-                });
-
-                // Onboarding Form
-                document.getElementById('player-form').addEventListener('submit', (e) => {
+                // Handle Player Profile Question Submission
+                this.dom.form.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    this.sound.init();
-                    this.pilotName = document.getElementById('input-pilot-name').value || 'Captain Alex';
-                    this.shipName = document.getElementById('input-ship-name').value || 'Phoenix-01';
-                    this.speed = parseInt(this.speedSlider.value) || 1;
-
-                    this.dispPilotName.textContent = this.pilotName;
-                    this.dispShipName.textContent = this.shipName;
-                    this.updateSpeedUI();
-
-                    this.modal.classList.add('opacity-0', 'pointer-events-none');
-                    setTimeout(() => {
-                        this.modal.classList.add('hidden');
-                        this.gameUI.classList.remove('opacity-0');
-                    }, 300);
+                    const callsign = this.dom.callsignInput.value.trim();
+                    if (callsign) {
+                        this.playerData.callsign = callsign;
+                        this.playerData.rank = this.dom.rankSelect.value;
+                        this.dom.displayCallsign.textContent = `${this.playerData.callsign} [${this.playerData.rank}]`;
+                        
+                        // Transition UI smoothly
+                        this.dom.modal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                        setTimeout(() => {
+                            this.dom.modal.style.display = 'none';
+                            this.dom.wrapper.classList.remove('opacity-0', 'pointer-events-none');
+                        }, 400);
+                    }
                 });
-            }
 
-            initThree() {
-                // Scene setup
-                this.scene = new THREE.Scene();
-                this.scene.fog = new THREE.FogExp2(0x020617, 0.015);
+                // Game Control Buttons
+                this.dom.startBtn.addEventListener('click', () => this.startGame());
+                this.dom.retryBtn.addEventListener('click', () => this.startGame());
 
-                // Camera
-                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.camera.position.set(0, 5, 12);
-                this.camera.lookAt(0, 0, 0);
-
-                // Renderer
-                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                this.renderer.shadowMap.enabled = true;
-                this.container.appendChild(this.renderer.domElement);
-
-                // Lights
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-                this.scene.add(ambientLight);
-
-                const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
-                dirLight.position.set(10, 20, 15);
-                this.scene.add(dirLight);
-
-                const pointLight = new THREE.PointLight(0xf43f5e, 1.5, 20);
-                pointLight.position.set(0, -2, 5);
-                this.scene.add(pointLight);
-
-                // Build Player Rocket Ship Model
-                this.createPlayerShip();
-
-                // Create Dynamic Starfield Background
-                this.createStarfield();
-
-                // Start render loop
-                this.animate();
-            }
-
-            createPlayerShip() {
-                this.playerGroup = new THREE.Group();
-
-                // Rocket Body (Cone)
-                const bodyGeo = new THREE.ConeGeometry(0.7, 3, 8);
-                const bodyMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3, metalness: 0.8 });
-                const body = new THREE.Mesh(bodyGeo, bodyMat);
-                body.rotation.x = Math.PI / 2;
-                this.playerGroup.add(body);
-
-                // Cockpit Glass
-                const glassGeo = new THREE.SphereGeometry(0.4, 8, 8);
-                const glassMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.8 });
-                const glass = new THREE.Mesh(glassGeo, glassMat);
-                glass.position.set(0, 0.3, 0.2);
-                glass.scale.set(1, 1.5, 0.8);
-                this.playerGroup.add(glass);
-
-                // Wings
-                const wingGeo = new THREE.BoxGeometry(2.5, 0.08, 0.8);
-                const wingMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.5 });
-                const wings = new THREE.Mesh(wingGeo, wingMat);
-                wings.position.set(0, 0, -0.3);
-                this.playerGroup.add(wings);
-
-                // Engine Thrusters Glow
-                const engineGeo = new THREE.CylinderGeometry(0.25, 0.35, 0.5, 8);
-                const engineMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
-                const engine = new THREE.Mesh(engineGeo, engineMat);
-                engine.rotation.x = Math.PI / 2;
-                engine.position.set(0, 0, -1.6);
-                this.playerGroup.add(engine);
-
-                this.playerGroup.position.set(0, 0, 0);
-                this.scene.add(this.playerGroup);
-            }
-
-            createStarfield() {
-                const count = 1500;
-                const geometry = new THREE.BufferGeometry();
-                const positions = new Float32Array(count * 3);
-
-                for (let i = 0; i < count * 3; i += 3) {
-                    positions[i] = (Math.random() - 0.5) * 200;
-                    positions[i + 1] = (Math.random() - 0.5) * 200;
-                    positions[i + 2] = (Math.random() - 0.5) * 300;
-                }
-
-                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, transparent: true, opacity: 0.8 });
-                this.stars = new THREE.Points(geometry, material);
-                this.scene.add(this.stars);
-            }
-
-            setupEventListeners() {
-                window.addEventListener('resize', () => this.onWindowResize());
-
-                // Keyboard
-                document.addEventListener('keydown', (e) => {
+                // Keyboard Listeners
+                window.addEventListener('keydown', (e) => {
+                    if (!this.isGameRunning) return;
+                    this.keys[e.key] = true;
                     if (e.key === 'Shift') this.isBoosting = true;
-                    if ((e.key === ' ' || e.code === 'Space') && this.isRunning) this.fireLaser();
-                    this.keys[e.key.toLowerCase()] = true;
+                    if (e.key === ' ' || e.key === 'Spacebar') {
+                        e.preventDefault();
+                        this.fireProjectile();
+                    }
                 });
 
-                document.addEventListener('keyup', (e) => {
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
                     if (e.key === 'Shift') this.isBoosting = false;
-                    this.keys[e.key.toLowerCase()] = false;
                 });
 
-                // UI Start/Restart Buttons
-                document.getElementById('btn-start-game').addEventListener('click', () => {
-                    if (!this.isRunning) this.startGame();
-                });
-                document.getElementById('btn-restart-game').addEventListener('click', () => {
-                    this.gameOverModal.classList.add('hidden');
-                    this.startGame();
-                });
+                // On-screen / Mobile Controls Bindings
+                this.dom.leftBtn.addEventListener('mousedown', () => this.keys['ArrowLeft'] = true);
+                this.dom.leftBtn.addEventListener('mouseup', () => this.keys['ArrowLeft'] = false);
+                this.dom.leftBtn.addEventListener('touchstart', () => this.keys['ArrowLeft'] = true);
+                this.dom.leftBtn.addEventListener('touchend', () => this.keys['ArrowLeft'] = false);
 
-                // Speed controls
-                document.getElementById('btn-speed-up').addEventListener('click', () => this.adjustSpeed(1));
-                document.getElementById('btn-speed-down').addEventListener('click', () => this.adjustSpeed(-1));
+                this.dom.rightBtn.addEventListener('mousedown', () => this.keys['ArrowRight'] = true);
+                this.dom.rightBtn.addEventListener('mouseup', () => this.keys['ArrowRight'] = false);
+                this.dom.rightBtn.addEventListener('touchstart', () => this.keys['ArrowRight'] = true);
+                this.dom.rightBtn.addEventListener('touchend', () => this.keys['ArrowRight'] = false);
 
-                // Mobile touch controls
-                const bindMobileBtn = (id, key) => {
-                    const btn = document.getElementById(id);
-                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.mobileControls[key] = true; });
-                    btn.addEventListener('touchend', (e) => { e.preventDefault(); this.mobileControls[key] = false; });
-                    btn.addEventListener('mousedown', () => { this.mobileControls[key] = true; });
-                    btn.addEventListener('mouseup', () => { this.mobileControls[key] = false; });
-                };
+                this.dom.upBtn.addEventListener('mousedown', () => this.keys['ArrowUp'] = true);
+                this.dom.upBtn.addEventListener('mouseup', () => this.keys['ArrowUp'] = false);
+                this.dom.upBtn.addEventListener('touchstart', () => this.keys['ArrowUp'] = true);
+                this.dom.upBtn.addEventListener('touchend', () => this.keys['ArrowUp'] = false);
 
-                bindMobileBtn('btn-mobile-left', 'left');
-                bindMobileBtn('btn-mobile-right', 'right');
-                bindMobileBtn('btn-mobile-up', 'up');
-                bindMobileBtn('btn-mobile-down', 'down');
+                this.dom.downBtn.addEventListener('mousedown', () => this.keys['ArrowDown'] = true);
+                this.dom.downBtn.addEventListener('mouseup', () => this.keys['ArrowDown'] = false);
+                this.dom.downBtn.addEventListener('touchstart', () => this.keys['ArrowDown'] = true);
+                this.dom.downBtn.addEventListener('touchend', () => this.keys['ArrowDown'] = false);
 
-                document.getElementById('btn-mobile-fire').addEventListener('click', () => {
-                    if (this.isRunning) this.fireLaser();
+                this.dom.fireBtn.addEventListener('click', () => {
+                    if (this.isGameRunning) this.fireProjectile();
                 });
 
-                const boostBtn = document.getElementById('btn-mobile-boost');
-                boostBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.isBoosting = true; });
-                boostBtn.addEventListener('touchend', (e) => { e.preventDefault(); this.isBoosting = false; });
-
-                // Mouse Drag Camera Rotation
-                this.container.addEventListener('mousedown', (e) => {
-                    this.isMouseDown = true;
-                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
-                });
-
-                this.container.addEventListener('mousemove', (e) => {
-                    if (!this.isMouseDown) return;
-                    const deltaX = e.clientX - this.previousMousePosition.x;
-                    const deltaY = e.clientY - this.previousMousePosition.y;
-
-                    this.cameraAngle.y += deltaX * 0.005;
-                    this.cameraAngle.x += deltaY * 0.005;
-
-                    this.previousMousePosition = { x: e.clientX, y: e.clientY };
-                });
-
-                window.addEventListener('mouseup', () => { this.isMouseDown = false; });
-            }
-
-            adjustSpeed(amount) {
-                this.speed = Math.min(this.maxSpeed, Math.max(1, this.speed + amount));
-                this.updateSpeedUI();
-            }
-
-            updateSpeedUI() {
-                this.dispSpeedNum.textContent = this.speed;
-                const percent = (this.speed / this.maxSpeed) * 100;
-                this.speedProgressFill.style.width = `${percent}%`;
+                this.dom.boostBtn.addEventListener('mousedown', () => this.isBoosting = true);
+                this.dom.boostBtn.addEventListener('mouseup', () => this.isBoosting = false);
+                this.dom.boostBtn.addEventListener('touchstart', () => this.isBoosting = true);
+                this.dom.boostBtn.addEventListener('touchend', () => this.isBoosting = false);
             }
 
             startGame() {
-                this.isRunning = true;
-                this.score = 0;
-                this.dispCurrentScore.textContent = '0';
-                
+                this.dom.startOverlay.classList.add('hidden');
+                this.dom.gameOverScreen.classList.add('hidden');
+
                 // Clear old elements
-                this.asteroids.forEach(a => this.scene.remove(a.mesh));
-                this.projectiles.forEach(p => this.scene.remove(p.mesh));
-                this.particles.forEach(p => this.scene.remove(p.mesh));
-                this.asteroids = [];
+                this.obstacles.forEach(o => o.element.remove());
+                this.projectiles.forEach(p => p.remove());
+                this.obstacles = [];
                 this.projectiles = [];
-                this.particles = [];
 
-                this.playerGroup.position.set(0, 0, 0);
-                document.getElementById('btn-start-game').innerHTML = '<i class="fa-solid fa-rotate-right mr-2"></i> Restart Flight';
+                this.score = 0;
+                this.speed = 1; // Start strictly at speed 1, user managed
+                this.isGameRunning = true;
+                this.isBoosting = false;
+                this.gameStartTime = Date.now();
+
+                this.dom.score.textContent = '0';
+                this.updateSpeedUI();
+
+                // Reset Player position
+                this.playerX = this.dom.gameArea.offsetWidth / 2;
+                this.playerY = 30; // bottom offset px
+                this.updatePlayerPosition();
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+
+                this.lastFrameTime = performance.now();
+                requestAnimationFrame((t) => this.loop(t));
             }
 
-            fireLaser() {
-                this.sound.playLaser();
-                const geo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 6);
-                const mat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.rotation.x = Math.PI / 2;
-                mesh.position.copy(this.playerGroup.position);
-                mesh.position.z -= 1.5;
-
-                this.scene.add(mesh);
-                this.projectiles.push({ mesh, speed: 2.0 });
+            updateTimer() {
+                if (!this.isGameRunning) return;
+                const elapsed = Math.floor((Date.now() - this.gameStartTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                this.dom.timer.textContent = `${mins}:${secs}`;
             }
 
-            spawnAsteroid() {
-                const size = Math.random() * 0.8 + 0.6;
-                const geo = new THREE.DodecahedronGeometry(size, 1);
-                const mat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 });
-                const mesh = new THREE.Mesh(geo, mat);
+            handleInput() {
+                const boostFactor = this.isBoosting ? 2.2 : 1.0;
+                const moveStep = 7 * boostFactor;
+                const areaWidth = this.dom.gameArea.offsetWidth;
+                const areaHeight = this.dom.gameArea.offsetHeight;
 
-                mesh.position.x = (Math.random() - 0.5) * 22;
-                mesh.position.y = (Math.random() - 0.5) * 14;
-                mesh.position.z = -120;
-
-                mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-
-                this.scene.add(mesh);
-                this.asteroids.push({
-                    mesh,
-                    rotSpeed: { x: Math.random() * 0.03, y: Math.random() * 0.03 },
-                    radius: size
-                });
-            }
-
-            createExplosion(position, color = 0xf59e0b) {
-                this.sound.playExplosion();
-                for (let i = 0; i < 20; i++) {
-                    const geo = new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 4, 4);
-                    const mat = new THREE.MeshBasicMaterial({ color: color });
-                    const mesh = new THREE.Mesh(geo, mat);
-                    mesh.position.copy(position);
-
-                    const velocity = new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.5,
-                        (Math.random() - 0.5) * 0.5,
-                        (Math.random() - 0.5) * 0.5
-                    );
-
-                    this.scene.add(mesh);
-                    this.particles.push({ mesh, velocity, life: 1.0 });
+                // Horizontal movement (Left / Right)
+                if ((this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) && this.playerX > 35) {
+                    this.playerX -= moveStep;
+                    this.dom.player.style.transform = `translateX(-50%) rotate(-12deg)`;
+                } else if ((this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) && this.playerX < areaWidth - 35) {
+                    this.playerX += moveStep;
+                    this.dom.player.style.transform = `translateX(-50%) rotate(12deg)`;
+                } else {
+                    this.dom.player.style.transform = `translateX(-50%) rotate(0deg)`;
                 }
-            }
 
-            animate() {
-                requestAnimationFrame(() => this.animate());
-
-                const effectiveSpeed = this.speed * (this.isBoosting ? 2.2 : 1.0);
-                this.dispBoostStatus.textContent = this.isBoosting ? 'NITRO ENGAGED!' : 'READY (SHIFT)';
-                this.dispBoostStatus.className = this.isBoosting ? 'text-xs font-orbitron font-bold text-amber-400 animate-pulse' : 'text-xs font-orbitron font-bold text-slate-500';
-
-                // Handle Player Controls Movement
-                if (this.isRunning) {
-                    const moveSpeed = 0.25;
-                    if (this.keys['a'] || this.keys['arrowleft'] || this.mobileControls.left) {
-                        this.playerGroup.position.x = Math.max(-12, this.playerGroup.position.x - moveSpeed);
-                        this.playerGroup.rotation.z = 0.3;
-                    } else if (this.keys['d'] || this.keys['arrowright'] || this.mobileControls.right) {
-                        this.playerGroup.position.x = Math.min(12, this.playerGroup.position.x + moveSpeed);
-                        this.playerGroup.rotation.z = -0.3;
-                    } else {
-                        this.playerGroup.rotation.z = 0;
+                // Manual Speed / Altitude control (Up / Down controls speed or rising/falling)
+                if ((this.keys['ArrowUp'] || this.keys['w'] || this.keys['W'])) {
+                    if (this.speed < this.maxSpeed) {
+                        this.speed += 0.15; // smooth manual speed increase
+                        if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+                        this.updateSpeedUI();
                     }
-
-                    if (this.keys['w'] || this.keys['arrowup'] || this.mobileControls.up) {
-                        this.playerGroup.position.y = Math.min(7, this.playerGroup.position.y + moveSpeed);
-                        this.playerGroup.rotation.x = -0.2;
-                    } else if (this.keys['s'] || this.keys['arrowdown'] || this.mobileControls.down) {
-                        this.playerGroup.position.y = Math.max(-7, this.playerGroup.position.y - moveSpeed);
-                        this.playerGroup.rotation.x = 0.2;
-                    } else {
-                        this.playerGroup.rotation.x = 0;
-                    }
-
-                    // Random spawn asteroids based on speed
-                    if (Math.random() < 0.04 * (effectiveSpeed / 4)) {
-                        this.spawnAsteroid();
+                }
+                if ((this.keys['ArrowDown'] || this.keys['s'] || this.keys['S'])) {
+                    if (this.speed > 1) {
+                        this.speed -= 0.2; // manual speed decrease
+                        if (this.speed < 1) this.speed = 1;
+                        this.updateSpeedUI();
                     }
                 }
 
-                // Update Starfield movement
-                if (this.stars) {
-                    const positions = this.stars.geometry.attributes.position.array;
-                    for (let i = 2; i < positions.length; i += 3) {
-                        positions[i] += effectiveSpeed * 0.15;
-                        if (positions[i] > 50) positions[i] = -250;
-                    }
-                    this.stars.geometry.attributes.position.needsUpdate = true;
-                }
+                // Update visual position
+                this.dom.player.style.left = `${this.playerX}px`;
 
-                // Update Projectiles
+                // Update Boost UI indicator & afterburner visual effect
+                if (this.isBoosting) {
+                    this.dom.boostStatus.classList.remove('hidden');
+                    this.dom.afterburner.style.height = '3rem';
+                    this.dom.afterburner.style.opacity = '1';
+                } else {
+                    this.dom.boostStatus.classList.add('hidden');
+                    this.dom.afterburner.style.height = '1.5rem';
+                    this.dom.afterburner.style.opacity = '0.7';
+                }
+            }
+
+            updatePlayerPosition() {
+                this.dom.player.style.left = `${this.playerX}px`;
+                this.dom.player.style.bottom = `${this.playerY}px`;
+            }
+
+            updateSpeedUI() {
+                const roundedSpeed = Math.round(this.speed);
+                this.dom.speedVal.textContent = roundedSpeed;
+                const percentage = (this.speed / this.maxSpeed) * 100;
+                this.dom.speedFill.style.width = `${percentage}%`;
+            }
+
+            fireProjectile() {
+                const proj = document.createElement('div');
+                proj.className = 'absolute w-1.5 h-5 bg-rose-400 rounded-full shadow-[0_0_10px_#f43f5e] z-20';
+                
+                const playerRect = this.dom.player.getBoundingClientRect();
+                const areaRect = this.dom.gameArea.getBoundingClientRect();
+
+                const leftPos = (playerRect.left - areaRect.left) + (playerRect.width / 2) - 3;
+                const bottomPos = areaRect.height - (playerRect.top - areaRect.top);
+
+                proj.style.left = `${leftPos}px`;
+                proj.style.bottom = `${bottomPos}px`;
+
+                this.dom.gameArea.appendChild(proj);
+                this.projectiles.push(proj);
+            }
+
+            spawnObstacle() {
+                // Spawn based on speed frequency
+                if (Math.random() < 0.02 + (this.speed * 0.001)) {
+                    const obs = document.createElement('div');
+                    const isBonusDrone = Math.random() < 0.35;
+                    
+                    obs.className = `absolute w-10 h-10 rounded-xl flex items-center justify-center font-orbitron text-xs font-bold shadow-lg transition-transform duration-300 ${
+                        isBonusDrone ? 'bg-amber-500/80 border border-amber-300 text-amber-950 glow-effect' : 'bg-rose-600/80 border border-rose-400 text-white glow-red'
+                    }`;
+                    obs.innerHTML = isBonusDrone ? '★' : '⚠️';
+
+                    const areaWidth = this.dom.gameArea.offsetWidth;
+                    const randomX = Math.random() * (areaWidth - 50) + 25;
+
+                    obs.style.left = `${randomX}px`;
+                    obs.style.top = `-50px`;
+
+                    this.dom.gameArea.appendChild(obs);
+                    this.obstacles.push({
+                        element: obs,
+                        x: randomX,
+                        y: -50,
+                        isBonus: isBonusDrone,
+                        speedMultiplier: Math.random() * 0.5 + 1
+                    });
+                }
+            }
+
+            loop(timestamp) {
+                if (!this.isGameRunning) return;
+
+                const deltaTime = (timestamp - this.lastFrameTime) / 16.66; // normalize to 60fps
+                this.lastFrameTime = timestamp;
+
+                this.handleInput();
+                this.spawnObstacle();
+
+                const currentSpeedFactor = (this.speed * 1.8) * (this.isBoosting ? 2.2 : 1.0);
+
+                // Update Three.js Background Starfield animation speed
+                animateThreeJS(this.speed * (this.isBoosting ? 2.5 : 1.0));
+
+                // Move and check Projectiles
                 for (let i = this.projectiles.length - 1; i >= 0; i--) {
                     const p = this.projectiles[i];
-                    p.mesh.position.z -= p.speed;
-
-                    // Collision check with asteroids
-                    for (let j = this.asteroids.length - 1; j >= 0; j--) {
-                        const ast = this.asteroids[j];
-                        if (p.mesh.position.distanceTo(ast.mesh.position) < ast.radius + 0.5) {
-                            this.createExplosion(ast.mesh.position, 0x38bdf8);
-                            this.scene.remove(ast.mesh);
-                            this.scene.remove(p.mesh);
-                            this.asteroids.splice(j, 1);
-                            this.projectiles.splice(i, 1);
-
-                            this.score += 25;
-                            this.dispCurrentScore.textContent = this.score;
-                            break;
-                        }
-                    }
-
-                    if (p && p.mesh.position.z < -150) {
-                        this.scene.remove(p.mesh);
+                    const currentBottom = parseFloat(p.style.bottom) || 0;
+                    const newBottom = currentBottom + (16 * deltaTime);
+                    
+                    if (newBottom > this.dom.gameArea.offsetHeight) {
+                        p.remove();
                         this.projectiles.splice(i, 1);
-                    }
-                }
+                    } else {
+                        p.style.bottom = `${newBottom}px`;
 
-                // Update Asteroids
-                for (let i = this.asteroids.length - 1; i >= 0; i--) {
-                    const ast = this.asteroids[i];
-                    ast.mesh.position.z += effectiveSpeed * 0.25;
-                    ast.mesh.rotation.x += ast.rotSpeed.x;
-                    ast.mesh.rotation.y += ast.rotSpeed.y;
+                        // Projectile collision against obstacles
+                        const pRect = p.getBoundingClientRect();
+                        for (let j = this.obstacles.length - 1; j >= 0; j--) {
+                            const o = this.obstacles[j];
+                            const oRect = o.element.getBoundingClientRect();
 
-                    // Player Collision Check
-                    if (this.isRunning && ast.mesh.position.distanceTo(this.playerGroup.position) < ast.radius + 0.8) {
-                        this.createExplosion(this.playerGroup.position, 0xf43f5e);
-                        this.gameOver();
-                    }
+                            if (this.isColliding(pRect, oRect)) {
+                                // Hit effect / Explosion score boost
+                                p.remove();
+                                this.projectiles.splice(i, 1);
 
-                    // Passed player safely
-                    if (ast.mesh.position.z > 20) {
-                        this.scene.remove(ast.mesh);
-                        this.asteroids.splice(i, 1);
-                        if (this.isRunning) {
-                            this.score += 10;
-                            this.dispCurrentScore.textContent = this.score;
+                                o.element.style.transform = 'scale(1.5) rotate(45deg)';
+                                o.element.style.opacity = '0';
+                                setTimeout(() => o.element.remove(), 200);
+                                this.obstacles.splice(j, 1);
+
+                                this.score += o.isBonus ? 50 : 20;
+                                this.dom.score.textContent = this.score;
+                                break;
+                            }
                         }
                     }
                 }
 
-                // Update Particles
-                for (let i = this.particles.length - 1; i >= 0; i--) {
-                    const pt = this.particles[i];
-                    pt.mesh.position.add(pt.velocity);
-                    pt.life -= 0.03;
-                    pt.mesh.scale.multiplyScalar(0.95);
+                // Move and check Obstacles
+                const playerRect = this.dom.player.getBoundingClientRect();
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const o = this.obstacles[i];
+                    o.y += currentSpeedFactor * o.speedMultiplier * deltaTime;
+                    o.element.style.top = `${o.y}px`;
 
-                    if (pt.life <= 0) {
-                        this.scene.remove(pt.mesh);
-                        this.particles.splice(i, 1);
+                    // Check if obstacle passed screen bottom
+                    if (o.y > this.dom.gameArea.offsetHeight) {
+                        o.element.remove();
+                        this.obstacles.splice(i, 1);
+                        this.score += 10; // Reward points for dodging
+                        this.dom.score.textContent = this.score;
+                        continue;
+                    }
+
+                    // Collision check with Player (Hover & Clash High-Quality Animation)
+                    const oRect = o.element.getBoundingClientRect();
+                    if (this.isColliding(playerRect, oRect)) {
+                        this.triggerCrashAnimation(o.element);
+                        return;
                     }
                 }
 
-                // Dynamic Camera Angle Interpolation
-                this.camera.position.x = Math.sin(this.cameraAngle.y) * 12;
-                this.camera.position.z = Math.cos(this.cameraAngle.y) * 12;
-                this.camera.position.y = 5 + this.cameraAngle.x * 5;
-                this.camera.lookAt(0, 0, -5);
+                requestAnimationFrame((t) => this.loop(t));
+            }
 
-                this.renderer.render(this.scene, this.camera);
+            isColliding(r1, r2) {
+                // Margin contraction for precise collision hitbox
+                const margin = 8;
+                return !(
+                    r1.right - margin < r2.left + margin ||
+                    r1.left + margin > r2.right - margin ||
+                    r1.bottom - margin < r2.top + margin ||
+                    r1.top + margin > r2.bottom - margin
+                );
+            }
+
+            triggerCrashAnimation(obstacleElement) {
+                this.isGameRunning = false;
+                clearInterval(this.timerInterval);
+
+                // Clash hover & vibration shockwave animation on player
+                this.dom.player.classList.add('scale-125', 'brightness-200', 'animate-ping');
+                obstacleElement.classList.add('scale-150', 'brightness-200', 'rotate-45');
+
+                setTimeout(() => {
+                    this.dom.player.classList.remove('scale-125', 'brightness-200', 'animate-ping');
+                    this.gameOver();
+                }, 500);
             }
 
             gameOver() {
-                this.isRunning = false;
-                this.dispLastScore.textContent = this.score;
+                this.isGameRunning = false;
+                this.isBoosting = false;
+
+                // Save persistent scores
+                this.lastScore = this.score;
+                localStorage.setItem('aerostrike_lastscore', this.lastScore);
+                this.dom.lastScore.textContent = `${this.lastScore} PTS`;
 
                 if (this.score > this.highScore) {
                     this.highScore = this.score;
-                    localStorage.setItem('astro_high_score', this.highScore);
-                    this.dispHighScore.textContent = this.highScore;
+                    localStorage.setItem('aerostrike_highscore', this.highScore);
+                    this.dom.highScore.textContent = `${this.highScore} PTS`;
                 }
 
-                this.gameOverScore.textContent = this.score;
-                this.gameOverModal.classList.remove('hidden');
-            }
-
-            onWindowResize() {
-                this.camera.aspect = window.innerWidth / window.innerHeight;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.dom.finalScore.textContent = this.score;
+                this.dom.gameOverScreen.classList.remove('hidden');
             }
         }
 
-        // Initialize Game Instance
-        window.onload = () => {
-            new RocketGame3D();
-        };
+        // Initialize ThreeJS and Game Engine on window load
+        window.addEventListener('load', () => {
+            initThreeJS();
+            window.gameInstance = new AeroStrikeGame();
+        });
     </script>
 </body>
 </html>
